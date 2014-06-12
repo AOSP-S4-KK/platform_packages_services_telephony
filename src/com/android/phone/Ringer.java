@@ -34,7 +34,6 @@ import android.os.Vibrator;
 import android.provider.Settings;
 import android.util.Log;
 
-import com.android.internal.util.paranoid.QuietHoursHelper;
 import com.android.internal.telephony.Phone;
 /**
  * Ringer manager for the Phone app.
@@ -171,7 +170,7 @@ public class Ringer {
             AudioManager audioManager =
                     (AudioManager) mContext.getSystemService(Context.AUDIO_SERVICE);
 
-            if (audioManager.getStreamVolume(AudioManager.STREAM_RING) == 0 || QuietHoursHelper.inQuietHours(mContext, Settings.System.QUIET_HOURS_RINGER)) {
+            if (audioManager.getStreamVolume(AudioManager.STREAM_RING) == 0) {
                 if (DBG) log("skipping ring because volume is zero");
                 return;
             }
