@@ -75,6 +75,7 @@ public class PhoneInterfaceManager extends ITelephony.Stub implements CallModele
     private static final int CMD_ANSWER_RINGING_CALL = 4;
     private static final int CMD_END_CALL = 5;  // not used yet
     private static final int CMD_SILENCE_RINGER = 6;
+    private static final int CMD_TOGGLE_LTE = 7; // not used yet
 
     /** The singleton instance. */
     private static PhoneInterfaceManager sInstance;
@@ -320,6 +321,24 @@ public class PhoneInterfaceManager extends ITelephony.Stub implements CallModele
         Intent intent = new Intent(Intent.ACTION_CALL, Uri.parse(url));
         intent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
         mApp.startActivity(intent);
+    }
+
+    public void toggleLTE(boolean on) {
+        int network = -1;
+        int phoneType = mPhone.getLteOnCdmaMode();
+
+        if (phoneType == PhoneConstants.LTE_ON_CDMA_TRUE) {
+            network = on ? Phone.NT_MODE_LTE_CMDA_EVDO_GSM_WCDMA
+                    : Phone.NT_MODE_CDMA;
+        } else {
+            network = on ? Phone.NT_MODE_LTE_GSM_WCDMA
+                    : Phone.NT_MODE_WCDMA_PREF;
+        }
+
+        mPhone.setPreferredNetworkType(network,
+                mMainThreadHandler.obtainMessage(CMD_TOGGLE_LTE));
+        android.provider.Settings.Global.putInt(mApp.getContentResolver(),
+                android.provider.Settings.Global.PREFERRED_NETWORK_MODE, network);
     }
 
     private boolean showCallScreenInternal(boolean specifyInitialDialpadState,
