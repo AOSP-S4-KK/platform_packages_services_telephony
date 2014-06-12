@@ -16,7 +16,6 @@
 
 package com.android.phone;
 
-import android.content.ContentResolver;
 import android.content.Context;
 import android.media.AudioManager;
 import android.media.Ringtone;
@@ -60,7 +59,6 @@ public class Ringer {
     private final BluetoothManager mBluetoothManager;
     Ringtone mRingtone;
     Vibrator mVibrator;
-    AudioManager mAudioManager;
     IPowerManager mPowerManager;
     volatile boolean mContinueVibrating;
     VibratorThread mVibratorThread;
@@ -89,7 +87,6 @@ public class Ringer {
     private Ringer(Context context, BluetoothManager bluetoothManager) {
         mContext = context;
         mBluetoothManager = bluetoothManager;
-        mAudioManager = (AudioManager) context.getSystemService(Context.AUDIO_SERVICE);
         mPowerManager = IPowerManager.Stub.asInterface(
                 ServiceManager.getService(Context.POWER_SERVICE));
         // We don't rely on getSystemService(Context.VIBRATOR_SERVICE) to make sure this
@@ -171,8 +168,10 @@ public class Ringer {
                 if (DBG) log("- starting vibrator...");
                 mVibratorThread.start();
             }
-            int ringerVolume = mAudioManager.getStreamVolume(AudioManager.STREAM_RING);
-            if (ringerVolume == 0 || QuietHoursHelper.inQuietHours(mContext, Settings.System.QUIET_HOURS_RINGER)) {
+            AudioManager audioManager =
+                    (AudioManager) mContext.getSystemService(Context.AUDIO_SERVICE);
+
+            if (audioManager.getStreamVolume(AudioManager.STREAM_RING) == 0 || QuietHoursHelper.inQuietHours(mContext, Settings.System.QUIET_HOURS_RINGER)) {
                 if (DBG) log("skipping ring because volume is zero");
                 return;
             }
@@ -204,7 +203,8 @@ public class Ringer {
     }
 
     boolean shouldVibrate() {
-        int ringerMode = mAudioManager.getRingerMode();
+        AudioManager audioManager = (AudioManager) mContext.getSystemService(Context.AUDIO_SERVICE);
+        int ringerMode = audioManager.getRingerMode();
         if (CallFeaturesSetting.getVibrateWhenRinging(mContext)) {
             return ringerMode != AudioManager.RINGER_MODE_SILENT;
         } else {
